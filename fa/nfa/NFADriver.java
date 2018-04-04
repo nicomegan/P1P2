@@ -55,7 +55,7 @@ public class NFADriver {
 			tk = new StringTokenizer(trans, " ");
 			while(tk.hasMoreTokens()){
 				char[] tran = tk.nextToken().toCharArray();
-				nfa.addTransition(String.valueOf(tran[0]), tran[1], String.valueOf(tran[2]));
+				nfa.addTransition(String.valueOf(tran[0]), tran[1], String.valueOf(tran[2])); 
 			}
 			DFA dfa = nfa.getDFA();
 			//print out dfa in the specified format.

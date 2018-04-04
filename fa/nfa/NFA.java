@@ -1,5 +1,6 @@
 package fa.nfa;
 
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -12,42 +13,77 @@ public class NFA implements FAInterface, NFAInterface {
 	private Set<NFAState> states;
 	private NFAState start;
 	private Set<Character> ordAbc;
-//	private Set<NFAState> finalStateSet; //TODO: maybe have flag for final and override constructor
+	private Set<NFAState> finalStateSet; //TODO: maybe have flag for final and override constructor
 	
 
 	public NFA() {
 		states = new LinkedHashSet<NFAState>();
 		ordAbc = new LinkedHashSet<Character>();
-		//finalStateSet = new LinkedHashSet<NFAState>();
+		finalStateSet = new LinkedHashSet<NFAState>();
 		
 	}
-	
+	 
 	
 	@Override
 	public DFA getDFA() {
 		// TODO Auto-generated method stub
+//		DFAState dfaStartState = (DFAState) eClosure((NFAState) getStartState());
 		return null;
 	}
 
 	@Override
 	public Set<NFAState> getToState(NFAState from, char onSymb) {
-		// TODO Auto-generated method stub
-		return null;
+		Set<NFAState> returnStates = new LinkedHashSet<NFAState>();
+		returnStates = from.getStatesFromTransition(onSymb);
+		
+		return returnStates;
 	}
 
 	@Override
 	public Set<NFAState> eClosure(NFAState s) {
-		// TODO Auto-generated method stub
-		return null;
+//		// TODO Auto-generated method stub
+//		Set<NFAState> returnStates = new LinkedHashSet<NFAState>();
+//		if(getToState(s, 'e')==null) {
+//			returnStates.add(s);
+//			return returnStates;
+//		}
+//		returnStates=getToState(s, 'e');
+//		Iterator it=returnStates.iterator();
+//		while(it.hasNext()) {
+//			NFAState next = (NFAState) it.next();
+//			eClosure(next);
+//		}
+//		return returnStates;
+		
+		
+		Set<NFAState> returnStates = new LinkedHashSet<NFAState>();
+		if(getToState(s, 'e')==null) {
+			returnStates.add(s);
+			return returnStates;
+		}
+		returnStates=getToState(s, 'e');
+		Iterator it=returnStates.iterator();
+		while(it.hasNext()) {
+			NFAState next = (NFAState) it.next();
+			eClosure(next);
+		}
+		
 	}
+	
+	
+	
+	
+	
+	
 
 	@Override
 	public void addStartState(String name) {
-		
 		//TODO: What if start state is final?
 		NFAState s = new NFAState(name);
 		this.start = s;
-		states.add(s);
+		if(!states.contains(getState(name))) {
+			states.add(s);	
+		}
 		
 	}
 
@@ -67,11 +103,7 @@ public class NFA implements FAInterface, NFAInterface {
 	@Override
 	public void addTransition(String fromState, char onSymb, String toState) {
 		NFAState s = getState(fromState);
-		s.addTransition()
-		
-		
-		// TODO Auto-generated method stub
-		
+		s.addTransition(onSymb, s);		
 	}
 
 	private NFAState getState(String name) {
@@ -88,26 +120,32 @@ public class NFA implements FAInterface, NFAInterface {
 	
 	@Override
 	public Set<? extends State> getStates() {
-		// TODO Auto-generated method stub
-		return null;
+		return states;
 	}
 
 	@Override
 	public Set<? extends State> getFinalStates() {
 		// TODO Auto-generated method stub
-		return null;
+		Iterator<NFAState> it = states.iterator();
+		Set<NFAState> finalStates = new LinkedHashSet<NFAState>();
+		while(it.hasNext()) {
+			NFAState s = (NFAState) it.next();
+			if(s.isFinal()) {
+				finalStates.add(s);
+			}
+		}
+		return finalStates;
 	}
 
 	@Override
 	public State getStartState() {
-		// TODO Auto-generated method stub
-		return null;
+		return start;
 	}
 
 	@Override
 	public Set<Character> getABC() {
 		// TODO Auto-generated method stub
-		return null;
+		return ordAbc;
 	}
 
 }
