@@ -37,7 +37,7 @@ public class DFAState extends State{
 		this.isFinal = isFinal;
 	}
 	
-	private void initDefault(String name ){
+	private void initDefault(String name){
 		this.name = name;
 		delta = new HashMap<Character, DFAState>();
 	}
