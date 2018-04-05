@@ -39,41 +39,92 @@ public class NFA implements FAInterface, NFAInterface {
 		return returnStates;
 	}
 
-	@Override
-	public Set<NFAState> eClosure(NFAState s) {
-//		// TODO Auto-generated method stub
+//	@Override
+//	public Set<NFAState> eClosure(NFAState s) {
+////		// TODO Auto-generated method stub
+////		Set<NFAState> returnStates = new LinkedHashSet<NFAState>();
+////		if(getToState(s, 'e')==null) {
+////			returnStates.add(s);
+////			return returnStates;
+////		}
+////		returnStates=getToState(s, 'e');
+////		Iterator it=returnStates.iterator();
+////		while(it.hasNext()) {
+////			NFAState next = (NFAState) it.next();
+////			eClosure(next);
+////		}
+////		return returnStates;
+//		
+//		
 //		Set<NFAState> returnStates = new LinkedHashSet<NFAState>();
-//		if(getToState(s, 'e')==null) {
+//		if(getToState(s, 'e') == null) {
 //			returnStates.add(s);
 //			return returnStates;
 //		}
 //		returnStates=getToState(s, 'e');
+//		returnStates.add(s);
 //		Iterator it=returnStates.iterator();
 //		while(it.hasNext()) {
 //			NFAState next = (NFAState) it.next();
 //			eClosure(next);
 //		}
-//		return returnStates;
-		
-		
-		Set<NFAState> returnStates = new LinkedHashSet<NFAState>();
-		if(getToState(s, 'e')==null) {
-			returnStates.add(s);
-			return returnStates;
+//		closure(s, new LinkedHashSet<NFAState>());
+//		
+//	}
+//	
+//	
+//	public Set<NFAState> closure(NFAState s, Set<NFAState> eSet){
+//		if(getToState(s, 'e') == null) {
+//			eSet.add(s);
+//			return eSet;
+//		}
+//		eSet=getToState(s, 'e');
+//		if(!eSet.contains(s)) // if self loop dont need to add s again? - check that state isnt already in there
+//			eSet.add(s);
+//		Iterator it=eSet.iterator();
+//		while(it.hasNext()) {
+//			NFAState next = (NFAState) it.next();
+//			State n = eClosure(next);
+//			if()
+//		}
+//		closure(s, new LinkedHashSet<NFAState>());
+//		
+//		
+//		
+//		
+//		return null;
+//	}
+	
+	
+	
+	public Set<NFAState> eClosure(NFAState s){	
+		Set<NFAState> newSet = new LinkedHashSet<NFAState>();
+		Set<NFAState> totalSet = new LinkedHashSet<NFAState>();
+
+		newSet = getToState(s, 'e');
+		if(newSet.isEmpty()) {
+			return totalSet;
 		}
-		returnStates=getToState(s, 'e');
-		Iterator it=returnStates.iterator();
-		while(it.hasNext()) {
-			NFAState next = (NFAState) it.next();
-			eClosure(next);
-		}
-		
+		Iterator<NFAState> itr1 = newSet.iterator();
+			while(itr1.hasNext()) {
+				NFAState newState = (NFAState) itr1.next();
+				if(!totalSet.contains(newState)) {
+					totalSet.add(newState);
+				}
+			}
+			
+		Iterator<NFAState> itr2 = totalSet.iterator();
+			while(itr2.hasNext()) {
+				closure(itr2.next(), totalSet);
+			}
+	
 	}
 	
+	public Set<NFAState> closure(NFAState s, Set<NFAState> eSet){
+			
+		
 	
-	
-	
-	
+	}
 	
 
 	@Override
