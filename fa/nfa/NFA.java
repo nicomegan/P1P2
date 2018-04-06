@@ -96,6 +96,9 @@ public class NFA implements FAInterface, NFAInterface {
 //	}
 	
 	
+	//////////////////////////////////////////////////////
+	//Below and above are random efforts at figuring out the recursion lol
+	
 	
 	public Set<NFAState> eClosure(NFAState s){	
 		Set<NFAState> newSet = new LinkedHashSet<NFAState>();
@@ -115,7 +118,7 @@ public class NFA implements FAInterface, NFAInterface {
 			
 		Iterator<NFAState> itr2 = totalSet.iterator();
 			while(itr2.hasNext()) {
-				closure(itr2.next(), totalSet);
+				closure(itr2.next(), totalSet); 
 			}
 	
 	}
@@ -125,6 +128,45 @@ public class NFA implements FAInterface, NFAInterface {
 		
 	
 	}
+	
+	
+	/////////////////////////////////////////////////////////////
+	// Global method mostly done
+	int i = 0;
+	int tempi = 0;
+	Set<NFAState> totalSet = new LinkedHashSet<NFAState>();
+	Set<NFAState> newSet = new LinkedHashSet<NFAState>();
+
+	
+	public Set<NFAState> newClosure(NFAState s){
+		
+		if((tempi + 1) == i) {
+			return totalSet;
+		}
+		if(totalSet.contains(s)) {
+			totalSet.add(s);
+			i++;
+		}
+		
+		newSet = getToState(s, 'e');
+		
+		Iterator<NFAState> itr = newSet.iterator();
+		while(itr.hasNext()) {
+			NFAState newState = itr.next();
+			if(!totalSet.contains(newState)){
+				totalSet.add(newState);
+			}
+		}
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
 	
 
 	@Override
