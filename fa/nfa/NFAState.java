@@ -40,7 +40,7 @@ public class NFAState extends fa.State {
 		// hMap.put(onSymb, (Set<NFAState>) toStates);
 		if(hMap.get(onSymb)==null) {
 //			toStates.add(toState);
-			hMap.put(onSymb, toStates);
+			hMap.put(onSymb, new LinkedHashSet());
 		}
 		hMap.get(onSymb).add(toState);// Think we want to add to the list that is stored
 	}
@@ -48,6 +48,9 @@ public class NFAState extends fa.State {
 	public Set<NFAState> getStatesFromTransition(char onSymb) {
 		Set s = hMap.get(onSymb);
 		return hMap.get(onSymb);
+	}
+	public HashMap<Character, Set<NFAState>> getMap(){
+		return hMap;
 	}
 
 }
