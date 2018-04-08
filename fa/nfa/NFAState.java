@@ -35,18 +35,18 @@ public class NFAState extends fa.State {
 		isFinal=true;
 	}
 
-	public void addTransition(char onSymb, NFAState toState) {
+	public void addTransitionToState(char onSymb, NFAState toState) {
 		// toState.
 		// hMap.put(onSymb, (Set<NFAState>) toStates);
 		if(hMap.get(onSymb)==null) {
-			Set<NFAState> newSet = new LinkedHashSet<NFAState>();
-			newSet.add(toState);
-			hMap.put(onSymb, newSet);
+//			toStates.add(toState);
+			hMap.put(onSymb, toStates);
 		}
 		hMap.get(onSymb).add(toState);// Think we want to add to the list that is stored
 	}
 	
 	public Set<NFAState> getStatesFromTransition(char onSymb) {
+		Set s = hMap.get(onSymb);
 		return hMap.get(onSymb);
 	}
 
