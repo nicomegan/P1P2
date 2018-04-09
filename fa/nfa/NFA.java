@@ -40,6 +40,8 @@ public class NFA implements FAInterface, NFAInterface {
 		start.addClosure(eClosure(start));
 
 		getNFATable();
+		
+		
 
 		return dfa;
 	}
@@ -54,9 +56,9 @@ public class NFA implements FAInterface, NFAInterface {
 				for (NFAState s : set) {
 					if (c != 'e') {
 						fillTableCell(s, c, new LinkedHashSet<NFAState>());
-//						if (eClosure(s).size() > 1) {
-////							fillCellEmptyTrans(s, c, new LinkedHashSet<NFAState>());
-//						}
+						// if (eClosure(s).size() > 1) {
+						//// fillCellEmptyTrans(s, c, new LinkedHashSet<NFAState>());
+						// }
 					}
 				}
 			}
@@ -84,20 +86,27 @@ public class NFA implements FAInterface, NFAInterface {
 	public void fillTableCell(NFAState s, char c, LinkedHashSet<NFAState> ls) {
 
 		// character first
-		LinkedHashSet<NFAState> transSet = (LinkedHashSet<NFAState>) s.getStatesFromTransition(c);
-		if (transSet != null) {
-			addToQueue(transSet, ls);
-		}
+		// LinkedHashSet<NFAState> transSet = (LinkedHashSet<NFAState>)
+		// s.getStatesFromTransition(c);
+		LinkedHashSet<NFAState> cSet = (LinkedHashSet<NFAState>) eClosure(s);
+		addToQueue(cSet, ls);
 
 		while (!queue.isEmpty()) {
 			NFAState ns = null;
 			try {
 				ns = queue.dequeue();
 
-				s.addTransitionToState(c, ns);
-				LinkedHashSet<NFAState> anotherS = (LinkedHashSet<NFAState>) eClosure(ns);
+				LinkedHashSet<NFAState> anotherS = (LinkedHashSet<NFAState>) getToState(ns, c);
 				if (anotherS != null) {
-					addToQueue(anotherS, ls);
+					Iterator i = anotherS.iterator();
+					while (i.hasNext()) {
+						NFAState next = (NFAState) i.next();
+						s.addTransitionToState(c, next);
+						Iterator it = eClosure(next).iterator();
+						while (it.hasNext()) {
+							s.addTransitionToState(c, (NFAState) it.next());
+						}
+					}
 				}
 
 			} catch (InterruptedException e) {
@@ -106,6 +115,33 @@ public class NFA implements FAInterface, NFAInterface {
 		}
 
 	}
+
+	// public void fillTableCell(NFAState s, char c, LinkedHashSet<NFAState> ls) {
+	//
+	// // character first
+	// LinkedHashSet<NFAState> transSet = (LinkedHashSet<NFAState>)
+	// s.getStatesFromTransition(c);
+	// if (transSet != null) {
+	// addToQueue(transSet, ls);
+	// }
+	//
+	// while (!queue.isEmpty()) {
+	// NFAState ns = null;
+	// try {
+	// ns = queue.dequeue();
+	//
+	// s.addTransitionToState(c, ns);
+	// LinkedHashSet<NFAState> anotherS = (LinkedHashSet<NFAState>) eClosure(ns);
+	// if (anotherS != null) {
+	// addToQueue(anotherS, ls);
+	// }
+	//
+	// } catch (InterruptedException e) {
+	// e.printStackTrace();
+	// }
+	// }
+	//
+	// }
 
 	// handle ones with empty transitions???
 	public void fillCellEmptyTrans(NFAState s, char c, LinkedHashSet<NFAState> ls) {
