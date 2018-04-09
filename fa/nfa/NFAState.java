@@ -67,4 +67,17 @@ public class NFAState extends fa.State {
 	public Set getClosure() {
 		return closure;
 	}
+	
+	public String getTransName(char c) {
+		String s="";
+		Set set = hMap.get(c);
+		Iterator itr = set.iterator();
+		while(itr.hasNext()) {
+			NFAState state = (NFAState) itr.next();
+			String stateString = state.getName();
+			s+=stateString;
+		}
+		
+		return s;
+	}
 }

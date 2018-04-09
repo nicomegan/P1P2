@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import fa.FAInterface;
 import fa.State;
@@ -20,6 +21,7 @@ public class NFA implements FAInterface, NFAInterface {
 	Set<NFAState> newSet = new LinkedHashSet<NFAState>();
 	private Queue<NFAState> q = new Queue();
 	private DFA dfa = new DFA();
+	private LinkedHashSet nfaTransitions = new LinkedHashSet();
 
 	public NFA() {
 		states = new LinkedHashSet<NFAState>();
@@ -30,9 +32,7 @@ public class NFA implements FAInterface, NFAInterface {
 
 	@Override
 	public DFA getDFA() {
-		System.out.println(states);
 		Iterator<NFAState> itr = states.iterator();
-		System.out.println("Closures");
 		while (itr.hasNext()) {
 			NFAState state = (NFAState) itr.next();
 			state.addClosure(eClosure(state));
@@ -40,15 +40,78 @@ public class NFA implements FAInterface, NFAInterface {
 		start.addClosure(eClosure(start));
 
 		getNFATable();
-		
-		
+
+		Set<NFAState> startSet = eClosure(start);
+		dfa.addStartState(startSet.toString());
+
+		Set<String> dfaStates = new LinkedHashSet<String>();
+		dfaStates.add(startSet.toString());
+
+		makeDFA(startSet, dfaStates);
 
 		return dfa;
 	}
 
+	private void makeDFA(Set<NFAState> fromStates, Set<String> dfaStates) {
+		TreeSet<String> from = sort(fromStates);
+		for (NFAState n : fromStates) {
+			if (n.isFinal()) {
+				if (!dfaStates.contains(from.toString())) {
+					dfa.addFinalState(from.toString());
+					dfaStates.add(from.toString());
+					break;
+				}
+			}
+		}
+
+		if (!dfaStates.contains(from.toString())) {
+			 dfa.addState(from.toString());
+			 dfaStates.add(from.toString());
+		}
+		
+		for(char c : ordAbc) {
+			if(c!='e') {
+				Set<NFAState> toStates = new LinkedHashSet<NFAState>();
+				for(NFAState n : fromStates) {
+					Set<NFAState> temp = getToState(n, c);
+					if(temp != null && !temp.isEmpty()) {
+						toStates.addAll(temp);
+					}
+				}
+				
+				TreeSet ts = sort(toStates);
+				if(!dfaStates.contains(ts.toString())) {
+					makeDFA(toStates, dfaStates);
+				}
+				dfa.addTransition(from.toString(), c, ts.toString());
+			}
+		}
+	}
+
+	private TreeSet<String> sort(Set<NFAState> s){
+		TreeSet<String> ts = new TreeSet();
+		for(NFAState ns: s) {
+			ts.add(ns.toString());
+		}
+		return ts;
+	}
+	
+	// private void addDFAStates() {
+	// Iterator itr = states.iterator();
+	// while(itr.hasNext()) {
+	// for(char c: ordAbc) {
+	// TreeSet ts = new TreeSet();
+	// String name = ((NFAState)itr.next()).getTransName(c);
+	// ts.add(name);
+	// nfaTransitions.add(ts);
+	// }
+	// }
+	// System.out.println(nfaTransitions);
+	//
+	// }
+
 	// fills in the hMap for the states so the 'e' is not needed
 	public void getNFATable() {
-		LinkedHashSet<NFAState> startClosure = (LinkedHashSet<NFAState>) eClosure(start);
 		for (NFAState state : states) {
 			LinkedHashSet<NFAState> set = (LinkedHashSet<NFAState>) eClosure(state);
 
@@ -56,9 +119,6 @@ public class NFA implements FAInterface, NFAInterface {
 				for (NFAState s : set) {
 					if (c != 'e') {
 						fillTableCell(s, c, new LinkedHashSet<NFAState>());
-						// if (eClosure(s).size() > 1) {
-						//// fillCellEmptyTrans(s, c, new LinkedHashSet<NFAState>());
-						// }
 					}
 				}
 			}
@@ -66,7 +126,6 @@ public class NFA implements FAInterface, NFAInterface {
 		Iterator itr = states.iterator();
 		while (itr.hasNext()) {
 			NFAState n = (NFAState) itr.next();
-			System.out.println(n.getName() + ": \n " + n.getMap());
 		}
 	}
 
@@ -84,10 +143,6 @@ public class NFA implements FAInterface, NFAInterface {
 	}
 
 	public void fillTableCell(NFAState s, char c, LinkedHashSet<NFAState> ls) {
-
-		// character first
-		// LinkedHashSet<NFAState> transSet = (LinkedHashSet<NFAState>)
-		// s.getStatesFromTransition(c);
 		LinkedHashSet<NFAState> cSet = (LinkedHashSet<NFAState>) eClosure(s);
 		addToQueue(cSet, ls);
 
@@ -104,7 +159,8 @@ public class NFA implements FAInterface, NFAInterface {
 						s.addTransitionToState(c, next);
 						Iterator it = eClosure(next).iterator();
 						while (it.hasNext()) {
-							s.addTransitionToState(c, (NFAState) it.next());
+							NFAState next2 = (NFAState) it.next();
+							s.addTransitionToState(c, next2);
 						}
 					}
 				}
@@ -288,7 +344,6 @@ public class NFA implements FAInterface, NFAInterface {
 	public void addTransition(String fromState, char onSymb, String toState) {
 		NFAState s = getState(fromState);
 		NFAState newS = getState(toState);
-		System.out.println("ADDING Tansition: from " + s + ", to " + newS);
 		s.addTransitionToState(onSymb, newS);
 		if (s.getName().equals(start.getName())) {
 			start.addTransitionToState(onSymb, newS);
