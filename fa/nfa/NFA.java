@@ -306,7 +306,6 @@ public class NFA implements FAInterface, NFAInterface {
 			try {
 				nextState = (NFAState) q.dequeue();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			if (nextState.getStatesFromTransition('e') != null) {
