@@ -8,6 +8,12 @@ import java.util.TreeSet;
 
 import fa.dfa.DFAState;
 
+/**
+ * Contains the data for a NFA state.
+ * 
+ * @author Anne Brinegar, Megan Pierce
+ *
+ */
 public class NFAState extends fa.State {
 
 	private Set<NFAState> finalStateSet = new LinkedHashSet<NFAState>();
@@ -16,6 +22,12 @@ public class NFAState extends fa.State {
 	private Set<NFAState> toStates = new LinkedHashSet<NFAState>();
 	private Set<NFAState> closure;
 
+	/**
+	 * Constructor for an NFAState
+	 * 
+	 * @param name
+	 *            - string
+	 */
 	public NFAState(String name) {
 		this.name = name;
 		hMap = new HashMap<Character, Set<NFAState>>();
@@ -24,6 +36,14 @@ public class NFAState extends fa.State {
 
 	}
 
+	/**
+	 * Constructor for NFAstate
+	 * 
+	 * @param name
+	 *            - string
+	 * @param isFinal
+	 *            - boolean flag
+	 */
 	public NFAState(String name, Boolean isFinal) {
 		this.name = name;
 		this.isFinal = true;
@@ -31,53 +51,101 @@ public class NFAState extends fa.State {
 		closure = new LinkedHashSet();
 	}
 
+	/**
+	 * returns if the state is final.
+	 * 
+	 * @return - boolean
+	 */
 	public boolean isFinal() {
 		return isFinal;
 	}
 
-	public void setFinal(NFAState s) {
+	/**
+	 * Sets a state as a final state.
+	 * 
+	 * @param s
+	 *            - state to set as final.
+	 */
+	public void setFinal() {
 		isFinal = true;
 	}
 
+	/**
+	 * adds a transition to the map.
+	 * 
+	 * @param onSymb
+	 *            - char transition letter
+	 * @param toState
+	 *            - NFAState
+	 */
 	public void addTransitionToState(char onSymb, NFAState toState) {
-		// toState.
-		// hMap.put(onSymb, (Set<NFAState>) toStates);
+
 		if (hMap.get(onSymb) == null) {
-			// toStates.add(toState);
 			hMap.put(onSymb, new LinkedHashSet());
 		}
 		hMap.get(onSymb).add(toState);// Think we want to add to the list that is stored
 	}
 
+	/**
+	 * gets the set of states that can be transitioned to on a specific charter
+	 * 
+	 * @param onSymb
+	 *            - char
+	 * @return - set of states
+	 */
 	public Set<NFAState> getStatesFromTransition(char onSymb) {
 		Set s = hMap.get(onSymb);
 		return hMap.get(onSymb);
 	}
 
+	/**
+	 * gets the hashmap of transitions
+	 * 
+	 * @return - hashmap
+	 */
 	public HashMap<Character, Set<NFAState>> getMap() {
 		return hMap;
 	}
 
-	public void addClosure(Set<NFAState> s) {
-		Iterator<NFAState> itr = s.iterator();
-		while (itr.hasNext()) {
-			closure.add((NFAState) itr.next());
-		}
-	}
-	public Set getClosure() {
-		return closure;
-	}
-	
+//	/**
+//	 * adds the closure to a state.
+//	 * 
+//	 * @param s
+//	 *            - set of states to add closures to.
+//	 */
+//	public void addClosure(Set<NFAState> s) {
+//		Iterator<NFAState> itr = s.iterator();
+//		while (itr.hasNext()) {
+//			closure.add((NFAState) itr.next());
+//		}
+//	}
+//
+//	/**
+//	 * Gets the closure set.
+//	 * 
+//	 * @return - closure set.
+//	 */
+//	public Set getClosure() {
+//		return closure;
+//	}
+
+	/**
+	 * Returns a string representation of a transition set.
+	 * 
+	 * @param c
+	 *            - char to transition on
+	 * @return - string
+	 */
 	public String getTransName(char c) {
-		String s="";
+		String s = "";
 		Set set = hMap.get(c);
 		Iterator itr = set.iterator();
-		while(itr.hasNext()) {
+		while (itr.hasNext()) {
 			NFAState state = (NFAState) itr.next();
 			String stateString = state.getName();
-			s+=stateString;
+			s += stateString;
 		}
-		
+
 		return s;
 	}
 }

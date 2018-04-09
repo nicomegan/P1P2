@@ -1,6 +1,5 @@
 package fa.nfa;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -9,25 +8,36 @@ import java.util.TreeSet;
 import fa.FAInterface;
 import fa.State;
 import fa.dfa.DFA;
-import fa.dfa.DFAState;
 import sun.misc.Queue;
 
+/**
+ * This makes an NFA with some methods to get state, add states and transitions,
+ * and get a DFA.
+ * 
+ * @author Anne Brinegar, Megan Pierce
+ *
+ */
 public class NFA implements FAInterface, NFAInterface {
 	private Set<NFAState> states;
 	private NFAState start;
 	private Set<Character> ordAbc;
-	private Set<NFAState> finalStateSet; // TODO: maybe have flag for final and override constructor
-	Set<NFAState> totalSet = new LinkedHashSet<NFAState>();
-	Set<NFAState> newSet = new LinkedHashSet<NFAState>();
-	private Queue<NFAState> q = new Queue();
+	@SuppressWarnings("unused")
+	private Set<NFAState> finalStateSet;
+	@SuppressWarnings("unused")
+	private Set<NFAState> totalSet = new LinkedHashSet<NFAState>();
+	@SuppressWarnings("unused")
+	private Set<NFAState> newSet = new LinkedHashSet<NFAState>();
+	private Queue<NFAState> q = new Queue<NFAState>();
 	private DFA dfa = new DFA();
-	private LinkedHashSet nfaTransitions = new LinkedHashSet();
+	private Queue<NFAState> queue = new Queue<NFAState>();
 
+	/**
+	 * NFA default contructor.
+	 */
 	public NFA() {
 		states = new LinkedHashSet<NFAState>();
 		ordAbc = new LinkedHashSet<Character>();
 		finalStateSet = new LinkedHashSet<NFAState>();
-
 	}
 
 	@Override
@@ -35,83 +45,100 @@ public class NFA implements FAInterface, NFAInterface {
 		Iterator<NFAState> itr = states.iterator();
 		while (itr.hasNext()) {
 			NFAState state = (NFAState) itr.next();
-			state.addClosure(eClosure(state));
+//			state.addClosure(
+					eClosure(state);
 		}
-		start.addClosure(eClosure(start));
+//		start.addClosure(
+				eClosure(start);
 
 		getNFATable();
 
 		Set<NFAState> startSet = eClosure(start);
-		dfa.addStartState(startSet.toString());
+		if(start.isFinal()) {
+			dfa.addFinalState(makeTreeSet(startSet).toString());
+		}
+		dfa.addStartState(makeTreeSet(startSet).toString());
 
 		Set<String> dfaStates = new LinkedHashSet<String>();
 		dfaStates.add(startSet.toString());
 
-		makeDFA(startSet, dfaStates);
+		constructDFA(startSet, dfaStates);
 
 		return dfa;
 	}
 
-	private void makeDFA(Set<NFAState> fromStates, Set<String> dfaStates) {
-		TreeSet<String> from = sort(fromStates);
-		for (NFAState n : fromStates) {
-			if (n.isFinal()) {
-				if (!dfaStates.contains(from.toString())) {
-					dfa.addFinalState(from.toString());
-					dfaStates.add(from.toString());
-					break;
-				}
-			}
-		}
-
-		if (!dfaStates.contains(from.toString())) {
-			 dfa.addState(from.toString());
-			 dfaStates.add(from.toString());
-		}
-		
-		for(char c : ordAbc) {
-			if(c!='e') {
-				Set<NFAState> toStates = new LinkedHashSet<NFAState>();
-				for(NFAState n : fromStates) {
-					Set<NFAState> temp = getToState(n, c);
-					if(temp != null && !temp.isEmpty()) {
-						toStates.addAll(temp);
-					}
-				}
-				
-				TreeSet ts = sort(toStates);
-				if(!dfaStates.contains(ts.toString())) {
-					makeDFA(toStates, dfaStates);
-				}
-				dfa.addTransition(from.toString(), c, ts.toString());
-			}
-		}
+	@Override
+	public Set<NFAState> getToState(NFAState from, char onSymb) {
+		Set<NFAState> returnStates = from.getStatesFromTransition(onSymb);
+		return returnStates;
 	}
 
-	private TreeSet<String> sort(Set<NFAState> s){
-		TreeSet<String> ts = new TreeSet();
-		for(NFAState ns: s) {
-			ts.add(ns.toString());
+	@Override
+	public Set<NFAState> eClosure(NFAState s) {
+		Set<NFAState> tSet = new LinkedHashSet<NFAState>();
+		if (getToState(s, 'e') == null) {
+			tSet.add(s);
+			return tSet;
 		}
-		return ts;
-	}
-	
-	// private void addDFAStates() {
-	// Iterator itr = states.iterator();
-	// while(itr.hasNext()) {
-	// for(char c: ordAbc) {
-	// TreeSet ts = new TreeSet();
-	// String name = ((NFAState)itr.next()).getTransName(c);
-	// ts.add(name);
-	// nfaTransitions.add(ts);
-	// }
-	// }
-	// System.out.println(nfaTransitions);
-	//
-	// }
+		tSet = getToState(s, 'e');
+		closure(s, tSet);
+		return tSet;
 
-	// fills in the hMap for the states so the 'e' is not needed
-	public void getNFATable() {
+	}
+
+	/**
+	 * Recursive method to find the closure and return it in a set.
+	 * 
+	 * @param s
+	 *            - State to find closure of.
+	 * @param eSet
+	 *            - return set that will be recursively updated.
+	 * @return - set of the states in closure.
+	 */
+	private Set<NFAState> closure(NFAState s, Set<NFAState> eSet) {
+		if (getToState(s, 'e') == null) {
+			eSet.add(s);
+			return eSet;
+		}
+		Set<NFAState> setToAdd = getToState(s, 'e');
+		boolean contains = false;
+		Iterator itr = eSet.iterator();
+		while(itr.hasNext()) {
+			NFAState next = (NFAState) itr.next();
+			if(s.getName().equals(next.getName())) {
+				contains = true;
+			}
+		}
+		if (!contains) {
+			eSet.add(s);
+		} else {
+			return eSet;
+		}
+		Iterator<NFAState> it = setToAdd.iterator();
+		while (it.hasNext()) {
+			NFAState next = (NFAState) it.next();
+			eSet.add(next);
+			q.enqueue(next);
+		}
+		if (!q.isEmpty()) {
+			NFAState nextState = null;
+			try {
+				nextState = (NFAState) q.dequeue();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			if (nextState.getStatesFromTransition('e') != null) {
+				closure(nextState, eSet);
+			}
+		}
+		return eSet;
+
+	}
+
+	/**
+	 * Completes the NFA table.
+	 */
+	private void getNFATable() {
 		for (NFAState state : states) {
 			LinkedHashSet<NFAState> set = (LinkedHashSet<NFAState>) eClosure(state);
 
@@ -123,15 +150,17 @@ public class NFA implements FAInterface, NFAInterface {
 				}
 			}
 		}
-		Iterator itr = states.iterator();
-		while (itr.hasNext()) {
-			NFAState n = (NFAState) itr.next();
-		}
 	}
 
-	Queue<NFAState> queue = new Queue<NFAState>();
-
-	public void addToQueue(Set s, LinkedHashSet ls) {
+	/**
+	 * adds elements in a set to a queue.
+	 * 
+	 * @param s
+	 *            - set of NFA states.
+	 * @param ls
+	 *            - set to track if it needs to be added to queue.
+	 */
+	public void addToQueue(Set<NFAState> s, LinkedHashSet<NFAState> ls) {
 		Iterator<NFAState> itr = s.iterator();
 		while (itr.hasNext()) {
 			NFAState n = itr.next();
@@ -142,7 +171,17 @@ public class NFA implements FAInterface, NFAInterface {
 		}
 	}
 
-	public void fillTableCell(NFAState s, char c, LinkedHashSet<NFAState> ls) {
+	/**
+	 * Fills an inividual cell of a NFA table.
+	 * 
+	 * @param s
+	 *            - the NFA state.
+	 * @param c
+	 *            - the character to read in.
+	 * @param ls
+	 *            - a linkedHashSet of all states seen.
+	 */
+	private void fillTableCell(NFAState s, char c, LinkedHashSet<NFAState> ls) {
 		LinkedHashSet<NFAState> cSet = (LinkedHashSet<NFAState>) eClosure(s);
 		addToQueue(cSet, ls);
 
@@ -153,11 +192,11 @@ public class NFA implements FAInterface, NFAInterface {
 
 				LinkedHashSet<NFAState> anotherS = (LinkedHashSet<NFAState>) getToState(ns, c);
 				if (anotherS != null) {
-					Iterator i = anotherS.iterator();
+					Iterator<NFAState> i = anotherS.iterator();
 					while (i.hasNext()) {
 						NFAState next = (NFAState) i.next();
 						s.addTransitionToState(c, next);
-						Iterator it = eClosure(next).iterator();
+						Iterator<NFAState> it = eClosure(next).iterator();
 						while (it.hasNext()) {
 							NFAState next2 = (NFAState) it.next();
 							s.addTransitionToState(c, next2);
@@ -172,149 +211,61 @@ public class NFA implements FAInterface, NFAInterface {
 
 	}
 
-	// public void fillTableCell(NFAState s, char c, LinkedHashSet<NFAState> ls) {
-	//
-	// // character first
-	// LinkedHashSet<NFAState> transSet = (LinkedHashSet<NFAState>)
-	// s.getStatesFromTransition(c);
-	// if (transSet != null) {
-	// addToQueue(transSet, ls);
-	// }
-	//
-	// while (!queue.isEmpty()) {
-	// NFAState ns = null;
-	// try {
-	// ns = queue.dequeue();
-	//
-	// s.addTransitionToState(c, ns);
-	// LinkedHashSet<NFAState> anotherS = (LinkedHashSet<NFAState>) eClosure(ns);
-	// if (anotherS != null) {
-	// addToQueue(anotherS, ls);
-	// }
-	//
-	// } catch (InterruptedException e) {
-	// e.printStackTrace();
-	// }
-	// }
-	//
-	// }
-
-	// handle ones with empty transitions???
-	public void fillCellEmptyTrans(NFAState s, char c, LinkedHashSet<NFAState> ls) {
-		LinkedHashSet<NFAState> anotherS = (LinkedHashSet<NFAState>) eClosure(s);// gets empty transitions
-		addToQueue(anotherS, ls);
-		Queue eQ = new Queue();
-		while (!queue.isEmpty()) {
-			NFAState ns = null;
-			try {
-				ns = queue.dequeue();
-				HashMap m = ns.getMap();
-				LinkedHashSet<NFAState> goThrough = (LinkedHashSet<NFAState>) ns.getStatesFromTransition(c);
-				if (goThrough != null) {
-					s.addTransitionToState(c, ns);
+	/**
+	 * Makes dfa given the start state has already been found and passed in.
+	 * 
+	 * @param initialState
+	 *            - the initial state that will start a transition
+	 * @param statesInDFA
+	 *            - a list of all states in the dfa.
+	 */
+	private void constructDFA(Set<NFAState> initialState, Set<String> statesInDFA) {
+		TreeSet<String> tsInitialState = makeTreeSet(initialState);
+		for (NFAState s : initialState) {
+			if (s.isFinal()) {
+				if (!statesInDFA.contains(tsInitialState.toString())) {
+					dfa.addFinalState(tsInitialState.toString());
+					statesInDFA.add(tsInitialState.toString());
+					break;
 				}
-
-				// eQ.enqueue(ns);
-				// LinkedHashSet<NFAState> as = (LinkedHashSet<NFAState>) eClosure(ns);
-				// addToQueue(as, ls);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
 			}
 		}
 
-	}
-	// public void fillTableCell(NFAState s, char c, LinkedHashSet<NFAState> ls) {
-	//
-	// //use transition then
-	// LinkedHashSet<NFAState> transSet = (LinkedHashSet<NFAState>)
-	// s.getStatesFromTransition(c);
-	//
-	// if (transSet !=null) {
-	// addToQueue(transSet, ls);
-	// }else {
-	//
-	// s.addTransitionToState(c, s);
-	// }
-	//
-	// while (!queue.isEmpty()) {
-	// NFAState ns = null;
-	// try {
-	// ns = queue.dequeue();
-	// ts.add(ns);
-	// s.addTransitionToState(c, ns);
-	// if (ns.getStatesFromTransition(c) != null) {
-	// LinkedHashSet<NFAState> newTs = (LinkedHashSet) s.getStatesFromTransition(c);
-	// LinkedHashSet<NFAState> anotherS = (LinkedHashSet<NFAState>) eClosure(s);
-	// if (anotherS != null) {
-	// Iterator<NFAState> i = anotherS.iterator();
-	// while (i.hasNext()) {
-	// newTs.add(i.next());
-	// }
-	// }
-	// if (newTs != null) {
-	// addToQueue(newTs, ls);
-	// }
-	// }
-	//
-	// } catch (InterruptedException e) {
-	// e.printStackTrace();
-	// }
-	// }
-	// }
-
-	@Override
-	public Set<NFAState> getToState(NFAState from, char onSymb) {
-		// from isnt null
-		Set<NFAState> returnStates = from.getStatesFromTransition(onSymb);
-		return returnStates;
-	}
-
-	// I think the two bellow work.
-	@Override
-	public Set<NFAState> eClosure(NFAState s) {
-		Set<NFAState> tSet = new LinkedHashSet<NFAState>();
-		if (getToState(s, 'e') == null) {
-			tSet.add(s);
-			return tSet;
+		if (!statesInDFA.contains(tsInitialState.toString())) {
+			dfa.addState(tsInitialState.toString());
+			statesInDFA.add(tsInitialState.toString());
 		}
-		tSet = getToState(s, 'e');
-		closure(s, tSet);
-		return tSet;
-
-	}
-
-	public Set<NFAState> closure(NFAState s, Set<NFAState> eSet) {
-		if (getToState(s, 'e') == null) {
-			eSet.add(s);
-			return eSet;
-		}
-		Set<NFAState> setToAdd = getToState(s, 'e');// this is just returning the same state
-		if (!eSet.contains(s)) { // if self loop dont need to add s again? - check that state isnt already in
-									// there
-			eSet.add(s);
-		} else {
-			return eSet;
-		}
-		Iterator it = setToAdd.iterator();
-		while (it.hasNext()) {
-			NFAState next = (NFAState) it.next();
-			eSet.add(next);
-			q.enqueue(next);
-		}
-		if (!q.isEmpty()) {
-			NFAState nextState = null;
-			try {
-				nextState = (NFAState) q.dequeue();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			if (nextState.getStatesFromTransition('e') != null) {
-				closure(nextState, eSet); // currently causes overflow. not leaving loop????
+		for (char c : ordAbc) {
+			if (c != 'e') {
+				Set<NFAState> toStates = new LinkedHashSet<NFAState>();
+				for (NFAState s : initialState) {
+					Set<NFAState> tansStates = getToState(s, c);
+					if (tansStates != null && !tansStates.isEmpty()) {
+						toStates.addAll(tansStates);
+					}
+				}
+				TreeSet<String> ts = makeTreeSet(toStates);
+				if (!statesInDFA.contains(ts.toString())) {
+					constructDFA(toStates, statesInDFA);
+				}
+				dfa.addTransition(tsInitialState.toString(), c, ts.toString());
 			}
 		}
-		return eSet;
+	}
 
+	/**
+	 * Makes a treeset given a set of nfa states.
+	 * 
+	 * @param s
+	 *            - set of NFAStates.
+	 * @return - treeset of the nfa states.
+	 */
+	private TreeSet<String> makeTreeSet(Set<NFAState> s) {
+		TreeSet<String> ts = new TreeSet<String>();
+		for (NFAState ns : s) {
+			ts.add(ns.toString());
+		}
+		return ts;
 	}
 
 	@Override
@@ -323,6 +274,10 @@ public class NFA implements FAInterface, NFAInterface {
 		this.start = s;
 		if (!states.contains(getState(name))) {
 			states.add(start);
+		}else {
+			if(start.getName().equals(name)) {
+				start.setFinal();
+			}
 		}
 
 	}
@@ -351,6 +306,13 @@ public class NFA implements FAInterface, NFAInterface {
 		ordAbc.add(onSymb);
 	}
 
+	/**
+	 * Gets the state given a string.
+	 * 
+	 * @param name
+	 *            - String name associated with the state.
+	 * @return - State that has the given name
+	 */
 	private NFAState getState(String name) {
 		NFAState ret = null;
 
@@ -390,5 +352,4 @@ public class NFA implements FAInterface, NFAInterface {
 	public Set<Character> getABC() {
 		return ordAbc;
 	}
-
 }
